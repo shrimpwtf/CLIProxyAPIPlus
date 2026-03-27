@@ -9,6 +9,7 @@ import (
 
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v6/internal/registry"
+	"github.com/router-for-me/CLIProxyAPI/v6/internal/thinking"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -54,10 +55,45 @@ func GetProviderName(modelName string) []string {
 	}
 
 	if len(providers) > 0 {
-		return providers
+		return prioritizeNativeProviders(modelName, providers)
 	}
 
 	return providers
+}
+
+func prioritizeNativeProviders(modelName string, providers []string) []string {
+	if len(providers) < 2 {
+		return providers
+	}
+
+	baseModel := strings.TrimSpace(thinking.ParseSuffix(modelName).ModelName)
+	if baseModel == "" {
+		baseModel = strings.TrimSpace(modelName)
+	}
+	if baseModel == "" {
+		return providers
+	}
+
+	native := make([]string, 0, len(providers))
+	other := make([]string, 0, len(providers))
+	for _, provider := range providers {
+		if registry.StaticChannelHasModel(provider, baseModel) {
+			native = append(native, provider)
+			continue
+		}
+		other = append(other, provider)
+	}
+
+	// Preserve the registry's original ordering inside each group; only move
+	// built-in/native providers ahead of generic compatibility aliases.
+	if len(native) == 0 || len(other) == 0 {
+		return providers
+	}
+
+	ordered := make([]string, 0, len(providers))
+	ordered = append(ordered, native...)
+	ordered = append(ordered, other...)
+	return ordered
 }
 
 // ResolveAutoModel resolves the "auto" model name to an actual available model.

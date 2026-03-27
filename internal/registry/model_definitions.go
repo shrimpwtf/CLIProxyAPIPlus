@@ -272,6 +272,23 @@ func LookupStaticModelInfo(modelID string) *ModelInfo {
 	return nil
 }
 
+// StaticChannelHasModel reports whether the static catalog for the given channel
+// contains the supplied model ID.
+func StaticChannelHasModel(channel, modelID string) bool {
+	modelID = strings.TrimSpace(modelID)
+	if modelID == "" {
+		return false
+	}
+
+	for _, model := range GetStaticModelDefinitionsByChannel(channel) {
+		if model != nil && strings.EqualFold(strings.TrimSpace(model.ID), modelID) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // GetGitHubCopilotModels returns the available models for GitHub Copilot.
 // These models are available through the GitHub Copilot API at api.githubcopilot.com.
 func GetGitHubCopilotModels() []*ModelInfo {
