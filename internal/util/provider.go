@@ -66,9 +66,9 @@ func prioritizeNativeProviders(modelName string, providers []string) []string {
 		return providers
 	}
 
-	baseModel := strings.TrimSpace(thinking.ParseSuffix(modelName).ModelName)
-	if baseModel == "" {
-		baseModel = strings.TrimSpace(modelName)
+	baseModel := strings.TrimSpace(modelName)
+	if parsed := thinking.ParseSuffix(baseModel); parsed.HasSuffix {
+		baseModel = strings.TrimSpace(parsed.ModelName)
 	}
 	if baseModel == "" {
 		return providers
